@@ -1,0 +1,598 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>mesh processing demo</title>
+      <meta name="generator" content="MATLAB 7.7">
+      <meta name="date" content="2011-10-02">
+      <meta name="m-file" content="demo_mesh_processing">
+      <LINK REL="stylesheet" HREF="style.css" TYPE="text/css">
+   </head>
+   <body>
+      <div class="content">
+         <h1>mesh processing demo</h1>
+         <introduction>
+            <p>This demo script explores the mesh processing functions provided by the EMBAL toolbox.</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Load a mesh</a></li>
+               <li><a href="#2">View mesh (basic mode)</a></li>
+               <li><a href="#3">View mesh (full mode : Better rendering, allows to double click on the mesh to pick a point)</a></li>
+               <li><a href="#4">Print mesh infos</a></li>
+               <li><a href="#5">Compute new normals</a></li>
+               <li><a href="#6">Compute mesh adjacency matrix</a></li>
+               <li><a href="#7">Compute mesh incidence matrix</a></li>
+               <li><a href="#8">Compute triangle areas</a></li>
+               <li><a href="#9">Decimate mesh</a></li>
+               <li><a href="#10">Smooth mesh</a></li>
+               <li><a href="#11">Compute mesh curvature texture</a></li>
+               <li><a href="#12">Smoothing a function defined over a triangulation</a></li>
+               <li><a href="#13">Compute mesh gradient and laplacian with P1 discretization</a></li>
+               <li><a href="#14">Superpose colors (curvature + activation)</a></li>
+               <li><a href="#15">Compute mesh connected components</a></li>
+               <li><a href="#16">Remove some points of the mesh</a></li>
+               <li><a href="#17">Check if mesh is closed</a></li>
+               <li><a href="#18">Mesh generator from a point cloud</a></li>
+               <li><a href="#19">Get points on the border of a mesh</a></li>
+               <li><a href="#20">Compute distance maps from multiple point in the mesh (Djikstra algorithm on each select node)</a></li>
+               <li><a href="#21">Compute patches on the mesh from multiple points and for multiple sizes</a></li>
+               <li><a href="#22">Rand 1D line on mesh</a></li>
+               <li><a href="#23">Compute all pairwise distances on the mesh using Floyd-Warshall algorithm</a></li>
+               <li><a href="#24">Update faces to have them correctly oriented (according to the center of the mesh)</a></li>
+               <li><a href="#25">Test if a point is inside or outside mesh</a></li>
+            </ul>
+         </div>
+         <h2>Load a mesh<a name="1"></a></h2><pre class="codeinput">echo <span class="string">on</span>
+
+close <span class="string">all</span>; clear; clc;
+
+[points,faces,normals] = load_tri(<span class="string">'data/white.tri'</span>);
+points(:,3) = -points(:,3);
+</pre><pre class="codeoutput">
+close all; clear; clc;
+
+[points,faces,normals] = load_tri('data/white.tri');
+points(:,3) = -points(:,3);
+
+%% View mesh (basic mode)
+smart_figure('demo_mesh_processing'); clf
+</pre><h2>View mesh (basic mode)<a name="2"></a></h2><pre class="codeinput">smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+clear <span class="string">options</span>
+options.camera_mode = 0; <span class="comment">% default mode</span>
+mesh_display(points,faces,options);
+</pre><pre class="codeoutput">clear options
+options.camera_mode = 0; % default mode
+mesh_display(points,faces,options);
+
+%% View mesh (full mode : Better rendering, allows to double click on the mesh to pick a point)
+clear options
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_01.png"> </div>
+         <h2>View mesh (full mode : Better rendering, allows to double click on the mesh to pick a point)<a name="3"></a></h2><pre class="codeinput">clear <span class="string">options</span>
+options.camera_mode = 2; <span class="comment">% full mode</span>
+smart_figure(<span class="string">'demo_mesh_processing'</span>); close <span class="string">all</span>
+mesh_display(points,faces,options);
+</pre><pre class="codeoutput">options.camera_mode = 2; % full mode
+smart_figure('demo_mesh_processing'); close all
+mesh_display(points,faces,options);
+
+%% Print mesh infos
+mesh_info(points,faces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_02.png"> </div>
+         <h2>Print mesh infos<a name="4"></a></h2><pre class="codeinput">mesh_info(points,faces);
+
+<span class="comment">% %% Print mesh statistics</span>
+<span class="comment">% [face_normals, face_areas, centers, normals, point_areas, ...</span>
+<span class="comment">% suspect_faces, nfaces_per_point, duplicated_faces, not_twice_faces] = mesh_stats(points,faces,1);</span>
+<span class="comment">%</span>
+</pre><pre class="codeoutput">--- Inspecting mesh :
+Nb points : 37319
+Nb faces : 74630
+Min area : 0.012349
+Max area : 7.1397
+Nb components : 2
+Components sizes : 18498  18821
+Is closed : 1
+
+% %% Print mesh statistics
+% [face_normals, face_areas, centers, normals, point_areas, ...
+% suspect_faces, nfaces_per_point, duplicated_faces, not_twice_faces] = mesh_stats(points,faces,1);
+%
+%% Compute new normals
+new_normals = mesh_normals(points,faces);
+</pre><h2>Compute new normals<a name="5"></a></h2><pre class="codeinput">new_normals = mesh_normals(points,faces);
+</pre><pre class="codeoutput">
+%% Compute mesh adjacency matrix
+A = mesh_adjacency(faces);
+</pre><h2>Compute mesh adjacency matrix<a name="6"></a></h2><pre class="codeinput">A = mesh_adjacency(faces);
+</pre><pre class="codeoutput">
+%% Compute mesh incidence matrix
+Ic = mesh_incidence(faces);
+</pre><h2>Compute mesh incidence matrix<a name="7"></a></h2><pre class="codeinput">Ic = mesh_incidence(faces);
+</pre><pre class="codeoutput">
+%% Compute triangle areas
+areas = mesh_cell_areas(points,faces);
+</pre><h2>Compute triangle areas<a name="8"></a></h2><pre class="codeinput">areas = mesh_cell_areas(points,faces);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+hist(areas)
+title(<span class="string">'Cell areas'</span>)
+</pre><pre class="codeoutput">smart_figure('demo_mesh_processing'); clf
+hist(areas)
+title('Cell areas')
+
+%% Decimate mesh
+[points_small,faces_small,normals_small] = mesh_decimate(points,faces,0.1); % divide number of points by 10
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_03.png"> </div>
+         <h2>Decimate mesh<a name="9"></a></h2><pre class="codeinput">[points_small,faces_small,normals_small] = mesh_decimate(points,faces,0.1); <span class="comment">% divide number of points by 10</span>
+</pre><pre class="codeoutput">
+%% Smooth mesh
+clear options
+</pre><h2>Smooth mesh<a name="10"></a></h2><pre class="codeinput">clear <span class="string">options</span>
+options.smoothing = 0.75;
+options.niter = 50;
+[points_smooth,A] = mesh_smooth(points,faces,options);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+mesh_display(points_smooth,faces);
+</pre><pre class="codeoutput">options.smoothing = 0.75;
+options.niter = 50;
+[points_smooth,A] = mesh_smooth(points,faces,options);
+Computing Connectivity (Mex File)
+Smoothing Mesh
+smart_figure('demo_mesh_processing'); clf
+mesh_display(points_smooth,faces);
+
+%% Compute mesh curvature texture
+clear options
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_04.png"> </div>
+         <h2>Compute mesh curvature texture<a name="11"></a></h2><pre class="codeinput">clear <span class="string">options</span>
+options.niter_smooth = 0;
+[curv,curv_sigmoid] = mesh_curvature(points,faces,options);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+clear <span class="string">options</span>
+options.face_vertex_color = curv;
+options.face_vertex_color = curv_sigmoid;
+mesh_display(points_smooth,faces,options);
+</pre><pre class="codeoutput">options.niter_smooth = 0;
+[curv,curv_sigmoid] = mesh_curvature(points,faces,options);
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_vertex_color = curv;
+options.face_vertex_color = curv_sigmoid;
+mesh_display(points_smooth,faces,options);
+
+%% Smoothing a function defined over a triangulation
+L = mesh_smoothing_matrix(points,faces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_05.png"> </div>
+         <h2>Smoothing a function defined over a triangulation<a name="12"></a></h2><pre class="codeinput">L = mesh_smoothing_matrix(points,faces);
+smooth_curv = L*L*L*L*curv;
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+clear <span class="string">options</span>
+options.face_vertex_color = smooth_curv;
+mesh_display(points_smooth,faces,options);
+</pre><pre class="codeoutput">smooth_curv = L*L*L*L*curv;
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_vertex_color = smooth_curv;
+mesh_display(points_smooth,faces,options);
+
+%% Compute mesh gradient and laplacian with P1 discretization
+grad = mesh_gradient(points,faces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_06.png"> </div>
+         <h2>Compute mesh gradient and laplacian with P1 discretization<a name="13"></a></h2><pre class="codeinput">grad = mesh_gradient(points,faces);
+laplacian = grad'*grad;
+</pre><pre class="codeoutput">laplacian = grad'*grad;
+
+%% Superpose colors (curvature + activation)
+smart_figure('demo_mesh_processing'); clf
+</pre><h2>Superpose colors (curvature + activation)<a name="14"></a></h2><pre class="codeinput">smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+activations = zeros(size(points,1),1);
+activations(2000) = 1;
+activations = L*(L*(L*(L*activations)));
+clear <span class="string">options</span>
+options.colors_transparency = 0.2;
+blended_colors = blend_data(curv,activations,options);
+clear <span class="string">options</span>
+options.face_vertex_color = blended_colors;
+mesh_display(points_smooth,faces,options);
+</pre><pre class="codeoutput">activations = zeros(size(points,1),1);
+activations(2000) = 1;
+activations = L*(L*(L*(L*activations)));
+clear options
+options.colors_transparency = 0.2;
+blended_colors = blend_data(curv,activations,options);
+clear options
+options.face_vertex_color = blended_colors;
+mesh_display(points_smooth,faces,options);
+
+%% Compute mesh connected components
+labels = mesh_components(faces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_07.png"> </div>
+         <h2>Compute mesh connected components<a name="15"></a></h2><pre class="codeinput">labels = mesh_components(faces);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+clear <span class="string">options</span>
+options.face_vertex_color = labels;
+mesh_display(points,faces,options);
+</pre><pre class="codeoutput">smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_vertex_color = labels;
+mesh_display(points,faces,options);
+
+%% Remove some points of the mesh
+component_idx = find(labels == 1);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_08.png"> </div>
+         <h2>Remove some points of the mesh<a name="16"></a></h2><pre class="codeinput">component_idx = find(labels == 1);
+[cpoints,cfaces,cnormals] = mesh_remove_points(points,faces,normals,component_idx);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+mesh_display(cpoints,cfaces);
+</pre><pre class="codeoutput">[cpoints,cfaces,cnormals] = mesh_remove_points(points,faces,normals,component_idx);
+smart_figure('demo_mesh_processing'); clf
+mesh_display(cpoints,cfaces);
+
+%% Check if mesh is closed
+is_closed = mesh_is_closed(cfaces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_09.png"> </div>
+         <h2>Check if mesh is closed<a name="17"></a></h2><pre class="codeinput">is_closed = mesh_is_closed(cfaces);
+disp([<span class="string">'mesh is closed : '</span>,num2str(is_closed)]);
+</pre><pre class="codeoutput">disp(['mesh is closed : ',num2str(is_closed)]);
+mesh is closed : 1
+
+%% Mesh generator from a point cloud
+random_points = randn(5000,3);
+</pre><h2>Mesh generator from a point cloud<a name="18"></a></h2><pre class="codeinput">random_points = randn(5000,3);
+random_points(random_points(:,3)&lt;0,:) = [];
+random_points = random_points ./ repmat(sqrt(sum(random_points.^2,2)),1,3);
+random_faces = mesh_generator(random_points);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+clear <span class="string">options</span>
+options.face_color = <span class="string">'none'</span>;
+options.edge_color = <span class="string">'k'</span>;
+mesh_display(random_points,random_faces,options);
+</pre><pre class="codeoutput">random_points(random_points(:,3)&lt;0,:) = [];
+random_points = random_points ./ repmat(sqrt(sum(random_points.^2,2)),1,3);
+random_faces = mesh_generator(random_points);
+
+method =
+
+default
+
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_color = 'none';
+options.edge_color = 'k';
+mesh_display(random_points,random_faces,options);
+
+%% Get points on the border of a mesh
+border_idx = mesh_border(random_faces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_10.png"> </div>
+         <h2>Get points on the border of a mesh<a name="19"></a></h2><pre class="codeinput">border_idx = mesh_border(random_faces);
+smart_figure(<span class="string">'demo_mesh_processing'</span>);
+hold <span class="string">on</span>
+glyph_display(random_points(border_idx,:));
+hold <span class="string">off</span>
+</pre><pre class="codeoutput">smart_figure('demo_mesh_processing');
+hold on
+glyph_display(random_points(border_idx,:));
+hold off
+
+%% Compute distance maps from multiple point in the mesh (Djikstra algorithm on each select node)
+dist_max = 50; % Maximum distance to consider
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_11.png"> </div>
+         <h2>Compute distance maps from multiple point in the mesh (Djikstra algorithm on each select node)<a name="20"></a></h2><pre class="codeinput">dist_max = 50; <span class="comment">% Maximum distance to consider</span>
+D = mesh_distance(points,faces,1:500,dist_max); <span class="comment">% Run on 500 points</span>
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+mesh_display_light(points,faces,D(:,1))
+figure
+mesh_display_light(points,faces,D(:,10))
+close <span class="string">all</span>
+</pre><pre class="codeoutput">D = mesh_distance(points,faces,1:500,dist_max); % Run on 500 points
+Running Djikstra algorithm
+smart_figure('demo_mesh_processing'); clf
+mesh_display_light(points,faces,D(:,1))
+
+ans =
+
+  184.0072
+
+figure
+mesh_display_light(points,faces,D(:,10))
+
+ans =
+
+  422.0062
+
+close all
+
+%% Compute patches on the mesh from multiple points and for multiple sizes
+dists = [0:2:10]; % Radius of patches to consider
+</pre><h2>Compute patches on the mesh from multiple points and for multiple sizes<a name="21"></a></h2><pre class="codeinput">dists = [0:2:10]; <span class="comment">% Radius of patches to consider</span>
+pidx = 1:20:length(points);
+P = mesh_all_patch(points,faces,dists,pidx);
+<span class="keyword">for</span> didx=1:length(dists)
+    close <span class="string">all</span>
+    smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">pidx = 1:20:length(points);
+P = mesh_all_patch(points,faces,dists,pidx);
+Computing 11196 patches
+[********************]
+for didx=1:length(dists)
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+end
+%% Rand 1D line on mesh
+idx = mesh_rand_line(points,faces,500,1);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_12.png"> </div>
+         <h2>Rand 1D line on mesh<a name="22"></a></h2><pre class="codeinput">idx = mesh_rand_line(points,faces,500,1);
+isolevels{1} = [idx(1:end-1)',idx(2:end)'];
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+clear <span class="string">options</span>
+options.camera_mode = 0; <span class="comment">% default mode</span>
+mesh_display(points,faces,options);
+hold <span class="string">on</span>
+mesh_display_isolevels(points,faces,isolevels);
+hold <span class="string">off</span>
+</pre><pre class="codeoutput">Computing Connectivity (Mex File)
+isolevels{1} = [idx(1:end-1)',idx(2:end)'];
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.camera_mode = 0; % default mode
+mesh_display(points,faces,options);
+hold on
+mesh_display_isolevels(points,faces,isolevels);
+hold off
+
+%% Compute all pairwise distances on the mesh using Floyd-Warshall algorithm
+[points,faces,normals] = load_tri('data/skull.tri');
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_13.png"> </div>
+         <h2>Compute all pairwise distances on the mesh using Floyd-Warshall algorithm<a name="23"></a></h2><pre class="codeinput">[points,faces,normals] = load_tri(<span class="string">'data/skull.tri'</span>);
+D = mesh_all_distances(points,faces);
+smart_figure(<span class="string">'demo_mesh_processing'</span>); clf
+mesh_display_light(points,faces,D(:,1))
+</pre><pre class="codeoutput">D = mesh_all_distances(points,faces);
+Running Floyd-Warshall algorithm
+smart_figure('demo_mesh_processing'); clf
+mesh_display_light(points,faces,D(:,1))
+
+ans =
+
+  170.0094
+
+
+%% Update faces to have them correctly oriented (according to the center of the mesh)
+[faces] = mesh_faces_reorient(points,faces);
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_14.png"> </div>
+         <h2>Update faces to have them correctly oriented (according to the center of the mesh)<a name="24"></a></h2><pre class="codeinput">[faces] = mesh_faces_reorient(points,faces);
+</pre><pre class="codeoutput">Flipping 0 faces
+
+%% Test if a point is inside or outside mesh
+test_point = points(1,:)-randn(1,3)/10;
+</pre><h2>Test if a point is inside or outside mesh<a name="25"></a></h2><pre class="codeinput">test_point = points(1,:)-randn(1,3)/10;
+clear <span class="string">options</span>
+options.display_mesh = true;
+clc
+is_inside = mesh_is_inside(points,faces,test_point,options);
+<span class="keyword">if</span> is_inside, disp(<span class="string">'Point is inside'</span>);
+<span class="keyword">else</span>, disp(<span class="string">'Point is outside'</span>); <span class="keyword">end</span>
+
+echo <span class="string">off</span>
+</pre><pre class="codeoutput">clear options
+options.display_mesh = true;
+clc
+is_inside = mesh_is_inside(points,faces,test_point,options);
+if is_inside, disp('Point is inside');
+else, disp('Point is outside'); end
+Point is outside
+
+echo off
+</pre><div class="div-img"><img vspace="5" hspace="5" src="demo_mesh_processing_15.png"> </div>
+         <p class="footer"><br>
+            see COPYING for license<br>
+            Copyright  &reg; 2009-2011 Alexandre Gramfort<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% mesh processing demo
+% This demo script explores the mesh processing functions provided by
+% the EMBAL toolbox.
+
+%% Load a mesh
+
+echo on
+
+close all; clear; clc;
+
+[points,faces,normals] = load_tri('data/white.tri');
+points(:,3) = -points(:,3);
+
+%% View mesh (basic mode)
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.camera_mode = 0; % default mode
+mesh_display(points,faces,options);
+
+%% View mesh (full mode : Better rendering, allows to double click on the mesh to pick a point)
+clear options
+options.camera_mode = 2; % full mode
+smart_figure('demo_mesh_processing'); close all
+mesh_display(points,faces,options);
+
+%% Print mesh infos
+mesh_info(points,faces);
+
+% %% Print mesh statistics
+% [face_normals, face_areas, centers, normals, point_areas, ...
+% suspect_faces, nfaces_per_point, duplicated_faces, not_twice_faces] = mesh_stats(points,faces,1);
+%
+%% Compute new normals
+new_normals = mesh_normals(points,faces);
+
+%% Compute mesh adjacency matrix
+A = mesh_adjacency(faces);
+
+%% Compute mesh incidence matrix
+Ic = mesh_incidence(faces);
+
+%% Compute triangle areas
+areas = mesh_cell_areas(points,faces);
+smart_figure('demo_mesh_processing'); clf
+hist(areas)
+title('Cell areas')
+
+%% Decimate mesh
+[points_small,faces_small,normals_small] = mesh_decimate(points,faces,0.1); % divide number of points by 10
+
+%% Smooth mesh
+clear options
+options.smoothing = 0.75;
+options.niter = 50;
+[points_smooth,A] = mesh_smooth(points,faces,options);
+smart_figure('demo_mesh_processing'); clf
+mesh_display(points_smooth,faces);
+
+%% Compute mesh curvature texture
+clear options
+options.niter_smooth = 0;
+[curv,curv_sigmoid] = mesh_curvature(points,faces,options);
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_vertex_color = curv;
+options.face_vertex_color = curv_sigmoid;
+mesh_display(points_smooth,faces,options);
+
+%% Smoothing a function defined over a triangulation
+L = mesh_smoothing_matrix(points,faces);
+smooth_curv = L*L*L*L*curv;
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_vertex_color = smooth_curv;
+mesh_display(points_smooth,faces,options);
+
+%% Compute mesh gradient and laplacian with P1 discretization
+grad = mesh_gradient(points,faces);
+laplacian = grad'*grad;
+
+%% Superpose colors (curvature + activation)
+smart_figure('demo_mesh_processing'); clf
+activations = zeros(size(points,1),1);
+activations(2000) = 1;
+activations = L*(L*(L*(L*activations)));
+clear options
+options.colors_transparency = 0.2;
+blended_colors = blend_data(curv,activations,options);
+clear options
+options.face_vertex_color = blended_colors;
+mesh_display(points_smooth,faces,options);
+
+%% Compute mesh connected components
+labels = mesh_components(faces);
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_vertex_color = labels;
+mesh_display(points,faces,options);
+
+%% Remove some points of the mesh
+component_idx = find(labels == 1);
+[cpoints,cfaces,cnormals] = mesh_remove_points(points,faces,normals,component_idx);
+smart_figure('demo_mesh_processing'); clf
+mesh_display(cpoints,cfaces);
+
+%% Check if mesh is closed
+is_closed = mesh_is_closed(cfaces);
+disp(['mesh is closed : ',num2str(is_closed)]);
+
+%% Mesh generator from a point cloud
+random_points = randn(5000,3);
+random_points(random_points(:,3)<0,:) = [];
+random_points = random_points ./ repmat(sqrt(sum(random_points.^2,2)),1,3);
+random_faces = mesh_generator(random_points);
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.face_color = 'none';
+options.edge_color = 'k';
+mesh_display(random_points,random_faces,options);
+
+%% Get points on the border of a mesh
+border_idx = mesh_border(random_faces);
+smart_figure('demo_mesh_processing');
+hold on
+glyph_display(random_points(border_idx,:));
+hold off
+
+%% Compute distance maps from multiple point in the mesh (Djikstra algorithm on each select node)
+dist_max = 50; % Maximum distance to consider
+D = mesh_distance(points,faces,1:500,dist_max); % Run on 500 points
+smart_figure('demo_mesh_processing'); clf
+mesh_display_light(points,faces,D(:,1))
+figure
+mesh_display_light(points,faces,D(:,10))
+close all
+
+%% Compute patches on the mesh from multiple points and for multiple sizes
+dists = [0:2:10]; % Radius of patches to consider
+pidx = 1:20:length(points);
+P = mesh_all_patch(points,faces,dists,pidx);
+for didx=1:length(dists)
+    close all
+    smart_figure('demo_mesh_processing'); clf
+    mesh_display_light(points,faces,double(P(:,1+(didx-1)*length(pidx))));
+end
+
+%% Rand 1D line on mesh
+idx = mesh_rand_line(points,faces,500,1);
+isolevels{1} = [idx(1:end-1)',idx(2:end)'];
+smart_figure('demo_mesh_processing'); clf
+clear options
+options.camera_mode = 0; % default mode
+mesh_display(points,faces,options);
+hold on
+mesh_display_isolevels(points,faces,isolevels);
+hold off
+
+%% Compute all pairwise distances on the mesh using Floyd-Warshall algorithm
+[points,faces,normals] = load_tri('data/skull.tri');
+D = mesh_all_distances(points,faces);
+smart_figure('demo_mesh_processing'); clf
+mesh_display_light(points,faces,D(:,1))
+
+%% Update faces to have them correctly oriented (according to the center of the mesh)
+[faces] = mesh_faces_reorient(points,faces);
+
+%% Test if a point is inside or outside mesh
+test_point = points(1,:)-randn(1,3)/10;
+clear options
+options.display_mesh = true;
+clc
+is_inside = mesh_is_inside(points,faces,test_point,options);
+if is_inside, disp('Point is inside');
+else, disp('Point is outside'); end
+
+echo off
+##### SOURCE END #####
+-->
+   </body>
+</html>
