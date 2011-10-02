@@ -1,8 +1,6 @@
-%% EMBAL mesh processing demo
+%% mesh processing demo
 % This demo script explores the mesh processing functions provided by
 % the EMBAL toolbox.
-%
-% $Id: demo_mesh_processing.m 171 2009-10-22 13:23:06Z gramfort $
 
 %% Load a mesh
 
@@ -10,7 +8,7 @@ echo on
 
 close all; clear; clc;
 
-[points,faces,normals] = load_tri('data/synth/model/synth_white_full.tri');
+[points,faces,normals] = load_tri('data/white.tri');
 points(:,3) = -points(:,3);
 
 %% View mesh (basic mode)
@@ -31,7 +29,7 @@ mesh_info(points,faces);
 % %% Print mesh statistics
 % [face_normals, face_areas, centers, normals, point_areas, ...
 % suspect_faces, nfaces_per_point, duplicated_faces, not_twice_faces] = mesh_stats(points,faces,1);
-% 
+%
 %% Compute new normals
 new_normals = mesh_normals(points,faces);
 
@@ -158,7 +156,7 @@ mesh_display_isolevels(points,faces,isolevels);
 hold off
 
 %% Compute all pairwise distances on the mesh using Floyd-Warshall algorithm
-[points,faces,normals] = load_tri('data/synth/model/synth_skull.tri');
+[points,faces,normals] = load_tri('data/skull.tri');
 D = mesh_all_distances(points,faces);
 smart_figure('demo_mesh_processing'); clf
 mesh_display_light(points,faces,D(:,1))
